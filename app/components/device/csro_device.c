@@ -3,7 +3,8 @@
 
 void csro_device_prepare_basic_message(void)
 {
-
+    //strcpy(mqtt.content, "csro_device_prepare_basic_message");
+    csro_system_prepare_message();
 }
 
 void csro_device_prepare_timer_message(void)

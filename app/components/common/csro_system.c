@@ -1,5 +1,6 @@
 #include "csro_common.h"
 #include "ssl/ssl_crypto.h"
+#include "cJSON.h"
 
 #define MACSTR_FORMAT   "%02x%02x%02x%02x%02x%02x"
 #define PASSSTR_FORMAT	"%02x%02x%02x%02x%02x%02x%02x%02x"
@@ -99,6 +100,7 @@ bool csro_system_get_wifi_status(void)
         {
             is_connect = true;
             csro_system_set_status(NORMAL_START_NOSERVER);
+            sysinfo.wifi_conn_count++;
             sysinfo.ip[0] = info.ip.addr&0xFF;
             sysinfo.ip[1] = (info.ip.addr&0xFF00)>>8;
             sysinfo.ip[2] = (info.ip.addr&0xFF0000)>>16;
@@ -129,5 +131,25 @@ void csro_system_set_interval(uint16_t interval)
 
 void csro_system_prepare_message(void)
 {
+    struct tm ontime;
+    localtime_r(&datetime.time_on, &ontime);
+    strftime(datetime.time_str, sizeof(datetime.time_str), "%Y/%m/%d %H:%M:%S", &ontime);
 
+    cJSON *sys_json=cJSON_CreateObject();
+
+    cJSON_AddNumberToObject(sys_json, "power_count", sysinfo.power_on_count);
+    cJSON_AddNumberToObject(sys_json, "router_count", sysinfo.wifi_conn_count);
+    cJSON_AddNumberToObject(sys_json, "broker_count", sysinfo.serv_conn_count);
+    cJSON_AddNumberToObject(sys_json, "free_heap", esp_get_free_heap_size());
+
+    cJSON_AddStringToObject(sys_json, "on_time", datetime.time_str);
+    cJSON_AddStringToObject(sys_json, "ip", sysinfo.ip_str);
+    cJSON_AddStringToObject(sys_json, "mac", sysinfo.mac_str);
+    cJSON_AddStringToObject(sys_json, "host_name", sysinfo.host_name);
+    cJSON_AddStringToObject(sys_json, "device_type", sysinfo.dev_type);
+
+    char *out = cJSON_PrintUnformatted(sys_json);
+	strcpy(mqtt.content, out);
+	free(out);
+	cJSON_Delete(sys_json);
 }

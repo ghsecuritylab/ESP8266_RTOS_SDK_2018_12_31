@@ -67,7 +67,6 @@ typedef struct
     uint32_t        power_on_count;
     uint32_t        wifi_conn_count;
     uint32_t        serv_conn_count;
-    uint32_t        publish_count;
 } system_struct;
 
 
@@ -80,7 +79,6 @@ typedef struct
     char            sub_topic_self[MQTT_TOPIC_LENGTH];
     char            sub_topic_group[MQTT_TOPIC_LENGTH];
     char            pub_topic[MQTT_TOPIC_LENGTH];
-    char            will_topic[MQTT_TOPIC_LENGTH];
 
     uint8_t         send_buf[MQTT_BUFFER_LENGTH];
     uint8_t         recv_buf[MQTT_BUFFER_LENGTH];
@@ -88,7 +86,6 @@ typedef struct
 
     char            broker[50];
     char            prefix[50];
-    char            will[50];
 
     uint16_t        interval;
     struct Network  network;
@@ -104,6 +101,7 @@ typedef struct
     time_t          time_now;
     time_t          time_run;
     struct tm       time_info;
+    char            time_str[100];
 } datetime_struct;
 
 
@@ -119,10 +117,6 @@ typedef struct
 extern system_struct        sysinfo;
 extern datetime_struct      datetime;
 extern mqtt_struct          mqtt;
-// extern SemaphoreHandle_t    basic_msg_semaphore;
-// extern SemaphoreHandle_t    system_msg_semaphore;
-// extern SemaphoreHandle_t    timer_msg_semaphore;
-// extern TimerHandle_t        basic_msg_timer;
 
 
 //csro_common.c
@@ -152,6 +146,10 @@ void csro_alarm_delete(uint8_t index);
 void csro_alarm_clear(void);
 void csro_datetime_set(char *time_str);
 void csro_datetime_init(void);
+
+
+//csro_udp.c
+void csro_udp_receive_task(void *pvParameters);
 
 
 //csro_mqtt.c
