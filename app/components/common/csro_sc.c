@@ -1,9 +1,9 @@
 #include "csro_common.h"
 #include "esp_smartconfig.h"
 
-static EventGroupHandle_t  wifi_event_group;
-static const EventBits_t   CONNECTED_BIT       = BIT0;
-static const EventBits_t   ESPTOUCH_DONE_BIT   = BIT1;
+static EventGroupHandle_t   wifi_event_group;
+static const EventBits_t    CONNECTED_BIT       = BIT0;
+static const EventBits_t    ESPTOUCH_DONE_BIT   = BIT1;
 
 
 static void smartconfig_callback(smartconfig_status_t status, void *pdata)
@@ -39,6 +39,7 @@ static void smartconfig_task(void * pvParameters)
             nvs_set_str(handle, "ssid", sysinfo.router_ssid);
             nvs_set_str(handle, "pass", sysinfo.router_pass);
             nvs_set_u8(handle, "router", 1);
+            nvs_set_u8(handle, "sc_flag", 1);
             nvs_commit(handle);
             nvs_close(handle);
             esp_restart();
@@ -64,7 +65,7 @@ static esp_err_t wifi_event_handler(void *ctx, system_event_t *event)
 }
 
 
-void csro_task_sc(void *pvParameters)
+void csro_sc_task(void *pvParameters)
 {
     csro_system_set_status(SMARTCONFIG);
     wifi_event_group = xEventGroupCreate();
@@ -74,7 +75,7 @@ void csro_task_sc(void *pvParameters)
     esp_wifi_init(&config);
     esp_wifi_set_mode(WIFI_MODE_STA);
     esp_wifi_start();
-    
+
     while(true) 
     { 
         vTaskDelay(1000 / portTICK_RATE_MS); 

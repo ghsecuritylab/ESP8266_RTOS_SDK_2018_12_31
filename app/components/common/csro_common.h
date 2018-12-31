@@ -56,6 +56,7 @@ typedef struct
     char            router_ssid[50];
     char            router_pass[50];
 
+    uint8_t         sc_flag;
     uint8_t         mac[6];
     uint8_t         ip[4];
 
@@ -117,6 +118,7 @@ typedef struct
 extern system_struct        sysinfo;
 extern datetime_struct      datetime;
 extern mqtt_struct          mqtt;
+extern alarm_struct         alarms[ALARM_NUMBER];
 
 
 //csro_common.c
@@ -137,7 +139,7 @@ bool csro_system_parse_level1_json_number(char *msg, uint32_t *dest, char *objec
 bool csro_system_parse_level2_json_number(char *msg, uint32_t *dest, char *object_name, char *sub_object_name);
 bool csro_system_parse_level1_json_string(char *msg, char *dest, char *object_name);
 bool csro_system_parse_level2_json_string(char *msg, char *dest, char *object_name, char *sub_object_name);
-
+bool csro_systen_get_self_message_sub_topic(MessageData *data, char *sub_topic);
 
 //csro_datetime.c
 void csro_alarm_add(uint8_t weekday, uint16_t minutes, uint16_t action);
@@ -153,11 +155,15 @@ void csro_udp_receive_task(void *pvParameters);
 
 
 //csro_mqtt.c
-void csro_task_mqtt(void *pvParameters);
+void csro_mqtt_change_state_msg_timer(void);
+void csro_mqtt_msg_trigger_state(TimerHandle_t xTimer);
+void csro_mqtt_msg_trigger_system(void);
+void csro_mqtt_msg_trigger_alarm(void);
+void csro_mqtt_task(void *pvParameters);
 
 
 //csro_sc.c
-void csro_task_sc(void *pvParameters);
+void csro_sc_task(void *pvParameters);
 
 
 #endif

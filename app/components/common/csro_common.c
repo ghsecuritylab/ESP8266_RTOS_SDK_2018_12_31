@@ -12,6 +12,6 @@ void csro_init(void)
     csro_system_get_info();
     csro_device_init();
 
-    if (csro_system_get_wifi_info()) { xTaskCreate(csro_task_mqtt, "csro_task_mqtt", 4096, NULL, 10, NULL); }
-    else                             { xTaskCreate(csro_task_sc, "csro_task_sc", 4096, NULL, 10, NULL); }
+    if (csro_system_get_wifi_info()) { xTaskCreate(csro_mqtt_task, "csro_mqtt_task", 4096, NULL, 10, NULL); }
+    else                             { xTaskCreate(csro_sc_task, "csro_sc_task", 4096, NULL, 10, NULL); }
 }

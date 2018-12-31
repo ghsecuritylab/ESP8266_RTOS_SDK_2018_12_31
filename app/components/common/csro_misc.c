@@ -78,3 +78,20 @@ EXIT:
     cJSON_Delete(json);
     return false;
 }
+
+bool csro_systen_get_self_message_sub_topic(MessageData* data, char *sub_topic)
+{
+    char topic[200];
+    bzero(topic, 200);
+    strncpy(topic, data->topicName->lenstring.data, data->topicName->lenstring.len);
+    char *segment;
+	segment = strtok(topic, "/");
+	while (segment) 
+    {
+        //bzero(sub_topic, 50);
+        strcpy(sub_topic, segment);
+        segment = strtok(NULL, "/");
+    }
+    debug("subtopic:%s\n", sub_topic);
+    return segment == NULL ? false : true;
+}

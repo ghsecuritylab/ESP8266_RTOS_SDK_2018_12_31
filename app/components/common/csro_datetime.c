@@ -2,7 +2,7 @@
 
 static TimerHandle_t	second_timer = NULL;
 static bool	            time_sync = false;
-static alarm_struct     alarms[ALARM_NUMBER];
+alarm_struct            alarms[ALARM_NUMBER];
 
 
 static void load_alarm_from_nvs(void)
