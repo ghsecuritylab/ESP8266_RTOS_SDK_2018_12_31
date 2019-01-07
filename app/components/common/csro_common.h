@@ -30,10 +30,10 @@
 #define     MIN_INTERVAL            2
 #define     MAX_INTERVAL            120
 
-
- #define     NLIGHT                  3
-// #define     DLIGHT                1
-// #define     MOTOR                 2
+#define     NLIGHT	                2              
+// #define     NLIGHT               3
+// #define     DLIGHT               1
+// #define     MOTOR                2
 // #define     AIR_MONITOR
 // #define     AIR_SYSTEM
 
@@ -55,16 +55,13 @@ typedef struct
     system_status   status;
     char            router_ssid[50];
     char            router_pass[50];
-
     uint8_t         sc_flag;
     uint8_t         mac[6];
     uint8_t         ip[4];
-
     char            host_name[20];
     char            dev_type[20];
     char            mac_str[20];
     char            ip_str[20];
-
     uint32_t        power_on_count;
     uint32_t        wifi_conn_count;
     uint32_t        serv_conn_count;
@@ -76,18 +73,14 @@ typedef struct
     char            id[MQTT_NAME_ID_LENGTH];
     char            name[MQTT_NAME_ID_LENGTH];
     char            pass[MQTT_NAME_ID_LENGTH];
-
     char            sub_topic_self[MQTT_TOPIC_LENGTH];
     char            sub_topic_group[MQTT_TOPIC_LENGTH];
     char            pub_topic[MQTT_TOPIC_LENGTH];
-
     uint8_t         send_buf[MQTT_BUFFER_LENGTH];
     uint8_t         recv_buf[MQTT_BUFFER_LENGTH];
     char            content[MQTT_BUFFER_LENGTH];
-
     char            broker[50];
     char            prefix[50];
-
     uint16_t        interval;
     struct Network  network;
     MQTTClient      client;

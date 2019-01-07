@@ -1,6 +1,8 @@
 #include "csro_device.h"
 #include "cJSON.h"
 
+#ifdef NLIGHT
+
 static csro_switch      channel[3];
 static TimerHandle_t	key_timer = NULL;
 static TimerHandle_t	led_timer = NULL;
@@ -43,33 +45,6 @@ void csro_nlight_prepare_basic_message(void)
 	strcpy(mqtt.content, out);
 	free(out);
 	cJSON_Delete(basic_json);
-}
-
-void csro_nlight_prepare_timer_message(void)
-{
-    uint8_t timer_count = 0;
-    char    key[20];
-    cJSON   *alarm_json=cJSON_CreateObject();
-
-    for(size_t i = 0; i < ALARM_NUMBER; i++)
-    {
-        if (alarms[i].valid == true) 
-        { 
-            timer_count++; 
-            sprintf(key, "alarm%d", timer_count);
-            uint32_t alarm_value = (((uint32_t)alarms[i].weekday) << 25) + (((uint32_t)alarms[i].minutes) << 14) + alarms[i].action;
-            cJSON_AddNumberToObject(alarm_json, key, alarm_value);
-        }
-        else 
-        {
-            cJSON_AddNumberToObject(alarm_json, "count", timer_count);
-            break;
-        }
-    }
-    char *out = cJSON_PrintUnformatted(alarm_json);
-	strcpy(mqtt.content, out);
-	free(out);
-	cJSON_Delete(alarm_json);
 }
 
 
@@ -123,10 +98,12 @@ static void led_timer_callback( TimerHandle_t xTimer )
 
 void csro_nlight_init(void)
 {
-    for(size_t i = 0; i < 3; i++) { channel[i].index = i; }
+    for(size_t i = 0; i < NLIGHT; i++) { channel[i].index = i; }
 
     key_timer = xTimerCreate("key_timer", 25/portTICK_RATE_MS, pdTRUE, (void *)0, key_timer_callback);
     led_timer = xTimerCreate("led_timer", 25/portTICK_RATE_MS, pdTRUE, (void *)0, led_timer_callback);
     if (key_timer != NULL) { xTimerStart(key_timer, 0); }
     if (led_timer != NULL) { xTimerStart(led_timer, 0); }
 }
+
+#endif

@@ -1,4 +1,5 @@
 #include "csro_device.h"
+#include "cJSON.h"
 
 
 void csro_device_prepare_basic_message(void)
@@ -18,17 +19,29 @@ void csro_device_prepare_basic_message(void)
 
 void csro_device_prepare_timer_message(void)
 {
-    #ifdef NLIGHT
-        csro_nlight_prepare_timer_message();
-    #elif defined DLIGHT
-        csro_dlight_prepare_timer_message();
-    #elif defined MOTOR
-        csro_motor_prepare_timer_message();
-    #elif defined AQI_MONITOR
-        csro_air_monitor_prepare_timer_message();
-    #elif defined AIR_SYSTEM
-        csro_air_system_prepare_timer_message();
-    #endif
+    uint8_t timer_count = 0;
+    char    key[20];
+    cJSON   *alarm_json=cJSON_CreateObject();
+
+    for(size_t i = 0; i < ALARM_NUMBER; i++)
+    {
+        if (alarms[i].valid == true) 
+        { 
+            timer_count++; 
+            sprintf(key, "alarm%d", timer_count);
+            uint32_t alarm_value = (((uint32_t)alarms[i].weekday) << 25) + (((uint32_t)alarms[i].minutes) << 14) + alarms[i].action;
+            cJSON_AddNumberToObject(alarm_json, key, alarm_value);
+        }
+        else 
+        {
+            cJSON_AddNumberToObject(alarm_json, "count", timer_count);
+            break;
+        }
+    }
+    char *out = cJSON_PrintUnformatted(alarm_json);
+	strcpy(mqtt.content, out);
+	free(out);
+	cJSON_Delete(alarm_json);
 }
 
 void csro_device_handle_self_message(MessageData* data)
