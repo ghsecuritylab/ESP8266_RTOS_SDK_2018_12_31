@@ -127,12 +127,28 @@ void csro_device_handle_self_message(MessageData* data)
     }
 }
 
+
+void csro_device_handle_hass_message(MessageData* data)
+{
+         #ifdef NLIGHT
+            csro_nlight_handle_hass_message(data);
+        #elif defined DLIGHT
+            csro_dlight_handle_hass_message(data);
+        #elif defined MOTOR
+            csro_motor_handle_hass_message(data);
+        #elif defined AQI_MONITOR
+            csro_air_monitor_handle_hass_message(data);
+        #elif defined AIR_SYSTEM
+            csro_air_system_handle_hass_message(data);
+        #endif   
+}
+
 void csro_device_handle_group_message(MessageData* data)
 {
     uint32_t value = 0;
     if(csro_system_parse_level1_json_number(data->message->payload, &value, "update")) 
     {
-        if(value == 1) { csro_mqtt_msg_trigger_state(NULL); }
+        if(value == 1) { csro_mqtt_msg_trigger_status(NULL); }
     }
 }
 

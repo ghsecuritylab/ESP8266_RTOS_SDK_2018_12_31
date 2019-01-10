@@ -102,6 +102,12 @@ void csro_motor_handle_self_message(MessageData *data)
     }
 }
 
+void csro_motor_handle_hass_message(MessageData *data)
+{
+
+    
+}
+
 void csro_motor_alarm_action(uint16_t action)
 {
 

@@ -15,7 +15,7 @@ static void nlight_channel_set(csro_switch *ch, uint8_t value, uint8_t source)
     ch->state = value;
     if(ch->state == 1)  { ch->on_source = source; ch->on_tim = datetime.time_now; }
     else                { ch->off_source = source; ch->off_tim = datetime.time_now; }
-    csro_mqtt_msg_trigger_state(NULL);
+    csro_mqtt_msg_trigger_status(NULL);
 }
 
 static void nlight_add_channel_json(cJSON *target, cJSON *channel_json, csro_switch *channel)
@@ -77,6 +77,10 @@ void csro_nlight_handle_self_message(MessageData *data)
     }
 }
 
+void csro_nlight_handle_hass_message(MessageData *data)
+{
+    
+}
 
 void csro_nlight_alarm_action(uint16_t action)
 {

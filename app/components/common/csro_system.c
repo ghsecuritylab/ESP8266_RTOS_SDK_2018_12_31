@@ -30,12 +30,9 @@ void csro_system_get_info(void)
     nvs_get_u8(handle, "sc_flag", &sysinfo.sc_flag);
     nvs_get_u32(handle, "power_count", &sysinfo.power_on_count);
     nvs_set_u32(handle, "power_count", (sysinfo.power_on_count + 1));
-
-    debug("sc_flag = %d\n", sysinfo.sc_flag);
-
     nvs_get_u16(handle, "interval", &mqtt.interval);
     if ( mqtt.interval < MIN_INTERVAL || mqtt.interval > MAX_INTERVAL) 
-    {
+    { 
         mqtt.interval = 5;
         nvs_set_u16(handle, "interval", mqtt.interval);
     }
@@ -49,7 +46,6 @@ void csro_system_get_info(void)
     sprintf(sysinfo.host_name, "csro_%s", sysinfo.mac_str);
     
     sprintf(mqtt.id, "csro/%s", sysinfo.mac_str);
-    sprintf(mqtt.name, "csro/%s/%s", sysinfo.mac_str, sysinfo.dev_type);
     sprintf(mqtt.name, "csro/%s/%s", sysinfo.mac_str, sysinfo.dev_type);
 
     uint8_t sha[20];
@@ -129,7 +125,7 @@ void csro_system_set_interval(uint16_t interval)
         nvs_commit(handle);
         nvs_close(handle);
         mqtt.interval = interval;
-        csro_mqtt_change_state_msg_timer();
+        csro_mqtt_change_status_msg_timer();
     }
 }
 

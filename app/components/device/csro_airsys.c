@@ -54,6 +54,11 @@ void csro_air_system_handle_self_message(MessageData* data)
     }
 }
 
+void csro_air_system_handle_hass_message(MessageData* data)
+{
+
+}
+
 void csro_air_system_alarm_action(uint16_t action)
 {
 

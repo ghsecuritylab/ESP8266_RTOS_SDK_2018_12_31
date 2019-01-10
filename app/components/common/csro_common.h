@@ -74,6 +74,7 @@ typedef struct
     char            name[MQTT_NAME_ID_LENGTH];
     char            pass[MQTT_NAME_ID_LENGTH];
     char            sub_topic_self[MQTT_TOPIC_LENGTH];
+    char            sub_topic_hass[MQTT_TOPIC_LENGTH];
     char            sub_topic_group[MQTT_TOPIC_LENGTH];
     char            pub_topic[MQTT_TOPIC_LENGTH];
     uint8_t         send_buf[MQTT_BUFFER_LENGTH];
@@ -148,8 +149,8 @@ void csro_udp_receive_task(void *pvParameters);
 
 
 //csro_mqtt.c
-void csro_mqtt_change_state_msg_timer(void);
-void csro_mqtt_msg_trigger_state(TimerHandle_t xTimer);
+void csro_mqtt_change_status_msg_timer(void);
+void csro_mqtt_msg_trigger_status(TimerHandle_t xTimer);
 void csro_mqtt_msg_trigger_system(void);
 void csro_mqtt_msg_trigger_alarm(void);
 void csro_mqtt_task(void *pvParameters);
