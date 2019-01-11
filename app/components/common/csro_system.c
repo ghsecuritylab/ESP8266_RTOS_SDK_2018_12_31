@@ -28,14 +28,13 @@ void csro_system_get_info(void)
     nvs_open("system", NVS_READWRITE, &handle);
 
     nvs_get_u8(handle, "sc_flag", &sysinfo.sc_flag);
+
     nvs_get_u32(handle, "power_count", &sysinfo.power_on_count);
     nvs_set_u32(handle, "power_count", (sysinfo.power_on_count + 1));
+
     nvs_get_u16(handle, "interval", &mqtt.interval);
-    if ( mqtt.interval < MIN_INTERVAL || mqtt.interval > MAX_INTERVAL) 
-    { 
-        mqtt.interval = 5;
-        nvs_set_u16(handle, "interval", mqtt.interval);
-    }
+    if ( mqtt.interval < MIN_INTERVAL || mqtt.interval > MAX_INTERVAL) { mqtt.interval = 5; nvs_set_u16(handle, "interval", mqtt.interval); }
+    
     nvs_commit(handle);
     nvs_close(handle);
 

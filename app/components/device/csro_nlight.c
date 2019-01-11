@@ -30,7 +30,7 @@ static void nlight_add_channel_json(cJSON *target, cJSON *channel_json, csro_swi
     cJSON_AddNumberToObject(channel_json, "offtim", channel->off_tim);
 }
 
-void csro_nlight_prepare_basic_message(void)
+void csro_nlight_prepare_status_message(void)
 {
     cJSON *basic_json=cJSON_CreateObject();
     cJSON *channel0 = NULL;

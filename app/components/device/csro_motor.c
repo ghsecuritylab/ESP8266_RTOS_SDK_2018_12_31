@@ -61,7 +61,7 @@ static void motor_add_channel_json(cJSON *target, cJSON *motor_json, csro_motor 
 }
 
 
-void csro_motor_prepare_basic_message(void)
+void csro_motor_prepare_status_message(void)
 {
     cJSON *basic_json=cJSON_CreateObject();
     cJSON *motor0 = NULL;

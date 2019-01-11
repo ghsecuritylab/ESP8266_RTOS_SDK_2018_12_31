@@ -1,10 +1,10 @@
 #include "csro_common.h"
 #include "csro_device.h"
 
-static SemaphoreHandle_t           state_msg_semaphore;
+static SemaphoreHandle_t           status_msg_semaphore;
 static SemaphoreHandle_t           system_msg_semaphore;
 static SemaphoreHandle_t           alarm_msg_semaphore;
-static TimerHandle_t               state_msg_timer = NULL;
+static TimerHandle_t               status_msg_timer = NULL;
 
 
 static bool mqtt_pub_messgae(char *suffix, enum QoS qos, bool retained)
@@ -45,19 +45,18 @@ static bool broker_is_connected(void)
     data.will.message.cstring = "offline";
 
     if (MQTTConnect(&mqtt.client, &data) != SUCCESS)                                                            { mqtt.client.isconnected = 0; return false; }
-    sysinfo.serv_conn_count++;
-
     if (MQTTSubscribe(&mqtt.client, mqtt.sub_topic_self, QOS1, csro_device_handle_self_message) != SUCCESS)     { mqtt.client.isconnected = 0; return false; }
     if (MQTTSubscribe(&mqtt.client, mqtt.sub_topic_hass, QOS1, csro_device_handle_hass_message) != SUCCESS)     { mqtt.client.isconnected = 0; return false; }
     if (MQTTSubscribe(&mqtt.client, mqtt.sub_topic_group, QOS1, csro_device_handle_group_message) != SUCCESS)   { mqtt.client.isconnected = 0; return false; }
 
+    sysinfo.serv_conn_count++;
     strcpy(mqtt.content, "online");
     return mqtt_pub_messgae("available", QOS1, true);
 }
 
-void csro_mqtt_change_status_msg_timer(void)                 { xTimerChangePeriod(state_msg_timer, (mqtt.interval * 1000) / portTICK_RATE_MS, 0); xTimerReset(state_msg_timer, 0); }
+void csro_mqtt_change_status_msg_timer(void)                { xTimerChangePeriod(status_msg_timer, (mqtt.interval * 1000) / portTICK_RATE_MS, 0); xTimerReset(status_msg_timer, 0); }
 
-void csro_mqtt_msg_trigger_status( TimerHandle_t xTimer )   { xSemaphoreGive(state_msg_semaphore); xTimerReset(state_msg_timer, 0); }
+void csro_mqtt_msg_trigger_status( TimerHandle_t xTimer )   { xSemaphoreGive(status_msg_semaphore); xTimerReset(status_msg_timer, 0); }
 
 void csro_mqtt_msg_trigger_system(void)                     { xSemaphoreGive(system_msg_semaphore); }
 
@@ -69,11 +68,12 @@ void csro_mqtt_task(void *pvParameters)
     static uint16_t wifi_retry = 0;
     xTaskCreate(csro_udp_receive_task, "csro_udp_receive_task", 2048, NULL, 5, NULL);
 
-    state_msg_semaphore = xSemaphoreCreateBinary();     xSemaphoreTake(state_msg_semaphore, 1);
+    status_msg_semaphore = xSemaphoreCreateBinary();     xSemaphoreTake(status_msg_semaphore, 1);
     system_msg_semaphore = xSemaphoreCreateBinary();    xSemaphoreTake(system_msg_semaphore, 1);
     alarm_msg_semaphore = xSemaphoreCreateBinary();     xSemaphoreTake(alarm_msg_semaphore, 1);
-    state_msg_timer = xTimerCreate("basic_msg_timer", (mqtt.interval * 1000)/portTICK_RATE_MS, pdTRUE, (void *)0, csro_mqtt_msg_trigger_status);
-    xTimerStart(state_msg_timer, 0);
+
+    status_msg_timer = xTimerCreate("status_msg_timer", (mqtt.interval * 1000)/portTICK_RATE_MS, pdTRUE, (void *)0, csro_mqtt_msg_trigger_status);
+    xTimerStart(status_msg_timer, 0);
     
     while(true)
     {
@@ -82,8 +82,8 @@ void csro_mqtt_task(void *pvParameters)
             if (broker_is_connected()) 
             {
                 csro_system_set_status(NORMAL_START_OK);
-                if (xSemaphoreTake(state_msg_semaphore,     1) == pdTRUE)   { csro_device_prepare_basic_message();  mqtt_pub_messgae("state",   QOS1, false); }
-                if (xSemaphoreTake(system_msg_semaphore,    1) == pdTRUE)   {  csro_system_prepare_message();       mqtt_pub_messgae("system",  QOS1, false); }
+                if (xSemaphoreTake(status_msg_semaphore,    1) == pdTRUE)   { csro_device_prepare_status_message();  mqtt_pub_messgae("state",   QOS1, false); }
+                if (xSemaphoreTake(system_msg_semaphore,    1) == pdTRUE)   { csro_system_prepare_message();       mqtt_pub_messgae("system",  QOS1, false); }
                 if (xSemaphoreTake(alarm_msg_semaphore,     1) == pdTRUE)   { csro_device_prepare_timer_message();  mqtt_pub_messgae("timer",   QOS1, false); }
                 if (MQTTYield(&mqtt.client, 50) != SUCCESS)                 { mqtt.client.isconnected = 0; }
             }

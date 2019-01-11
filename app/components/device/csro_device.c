@@ -2,18 +2,18 @@
 #include "cJSON.h"
 
 
-void csro_device_prepare_basic_message(void)
+void csro_device_prepare_status_message(void)
 {
     #ifdef NLIGHT
-        csro_nlight_prepare_basic_message();
+        csro_nlight_prepare_status_message();
     #elif defined DLIGHT
-        csro_dlight_prepare_basic_message();
+        csro_dlight_prepare_status_message();
     #elif defined MOTOR
-        csro_motor_prepare_basic_message();
+        csro_motor_prepare_status_message();
     #elif defined AQI_MONITOR
-        csro_air_monitor_prepare_basic_message();
+        csro_air_monitor_prepare_status_message();
     #elif defined AIR_SYSTEM
-        csro_air_system_prepare_basic_message();
+        csro_air_system_prepare_status_message();
     #endif
 }
 

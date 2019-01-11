@@ -33,7 +33,7 @@ static void modify_holding_reg(uint8_t index, uint8_t value)
 
 
 
-void csro_air_system_prepare_basic_message(void)
+void csro_air_system_prepare_status_message(void)
 {
 
 }

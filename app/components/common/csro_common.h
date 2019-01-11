@@ -30,7 +30,7 @@
 #define     MIN_INTERVAL            2
 #define     MAX_INTERVAL            120
 
-#define     NLIGHT	                2              
+#define     NLIGHT	                3              
 // #define     NLIGHT               3
 // #define     DLIGHT               1
 // #define     MOTOR                2
