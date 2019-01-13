@@ -1,6 +1,22 @@
 #include "csro_common.h"
 #include "cJSON.h"
 
+bool csro_system_parse_level1_json_object(char *msg, char *object_name)
+{
+    cJSON *json = cJSON_Parse(msg);
+    if (json == NULL) { goto EXIT; }
+
+    cJSON *object = cJSON_GetObjectItem(json, object_name);
+    if (object == NULL || (object->type != cJSON_Object)) { goto EXIT; }
+
+    cJSON_Delete(json);
+    return true;
+
+EXIT:
+    cJSON_Delete(json);
+    return false;
+}
+
 bool csro_system_parse_level1_json_number(char *msg, uint32_t *dest, char *object_name)
 {
     cJSON *json = cJSON_Parse(msg);
@@ -79,7 +95,7 @@ EXIT:
     return false;
 }
 
-bool csro_systen_get_self_message_sub_topic(MessageData* data, char *sub_topic)
+void csro_systen_get_hass_message_sub_topic(MessageData* data, char *sub_topic)
 {
     char topic[200];
     bzero(topic, 200);
@@ -88,10 +104,9 @@ bool csro_systen_get_self_message_sub_topic(MessageData* data, char *sub_topic)
 	segment = strtok(topic, "/");
 	while (segment) 
     {
-        //bzero(sub_topic, 50);
+        bzero(sub_topic, 50);
         strcpy(sub_topic, segment);
         segment = strtok(NULL, "/");
     }
     debug("subtopic:%s\n", sub_topic);
-    return segment == NULL ? false : true;
 }

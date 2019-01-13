@@ -33,14 +33,10 @@ static void nlight_add_channel_json(cJSON *target, cJSON *channel_json, csro_swi
 void csro_nlight_prepare_status_message(void)
 {
     cJSON *basic_json=cJSON_CreateObject();
-    cJSON *channel0 = NULL;
-    cJSON *channel1 = NULL;
-    cJSON *channel2 = NULL;
-    
-    if ( NLIGHT >= 1 ) {  nlight_add_channel_json(basic_json, channel0, &channel[0]); }
-    if ( NLIGHT >= 2 ) {  nlight_add_channel_json(basic_json, channel1, &channel[1]); }
-    if ( NLIGHT >= 3 ) {  nlight_add_channel_json(basic_json, channel2, &channel[2]); }
-
+    cJSON *channel_json[3];
+    if ( NLIGHT >= 1 ) {  nlight_add_channel_json(basic_json, channel_json[0], &channel[0]); }
+    if ( NLIGHT >= 2 ) {  nlight_add_channel_json(basic_json, channel_json[1], &channel[1]); }
+    if ( NLIGHT >= 3 ) {  nlight_add_channel_json(basic_json, channel_json[2], &channel[2]); }
     char *out = cJSON_PrintUnformatted(basic_json);
 	strcpy(mqtt.content, out);
 	free(out);
@@ -50,36 +46,42 @@ void csro_nlight_prepare_status_message(void)
 
 void csro_nlight_handle_self_message(MessageData *data)
 {
-    char        sub_topic[50];
-    csro_systen_get_self_message_sub_topic(data, sub_topic);
-
-    if (strcmp(sub_topic, "light") == 0) 
-    {
-        char command[50];
-        if (NLIGHT >= 1){
-            if(csro_system_parse_level1_json_string(data->message->payload, command, "channel1")) {
-                    if (strcmp(command, "on") == 0)     { nlight_channel_set(&channel[0], 1, 1); }
-                else if (strcmp(command, "off") == 0)   { nlight_channel_set(&channel[0], 0, 1); }
-            }
-        }
-        if (NLIGHT >= 2) {
-            if(csro_system_parse_level1_json_string(data->message->payload, command, "channel2")) {
-                    if (strcmp(command, "on") == 0)     { nlight_channel_set(&channel[1], 1, 1); }
-                else if (strcmp(command, "off") == 0)   { nlight_channel_set(&channel[1], 0, 1); }
-            }
-        }
-        if (NLIGHT >= 3) {
-            if(csro_system_parse_level1_json_string(data->message->payload, command, "channel3")) {
-                    if (strcmp(command, "on") == 0)     { nlight_channel_set(&channel[2], 1, 1); }
-                else if (strcmp(command, "off") == 0)   { nlight_channel_set(&channel[2], 0, 1); }
-            }
-        }
-    }
+    uint32_t value = 0;
+    bool valid = false;
+    if (NLIGHT >= 1) { if(csro_system_parse_level1_json_number(data->message->payload, &value, "channel1")) { nlight_channel_set(&channel[0], value, 1); valid = true; } }
+    if (NLIGHT >= 2) { if(csro_system_parse_level1_json_number(data->message->payload, &value, "channel2")) { nlight_channel_set(&channel[1], value, 1); valid = true; } }
+    if (NLIGHT >= 3) { if(csro_system_parse_level1_json_number(data->message->payload, &value, "channel3")) { nlight_channel_set(&channel[2], value, 1); valid = true; } }
+    if(valid == true) { csro_mqtt_msg_trigger_status(NULL); }
 }
 
 void csro_nlight_handle_hass_message(MessageData *data)
 {
+    char sub_topic[50];
+    bool valid = false;
+    char payload[200];
+
+    strncpy(payload, data->message->payload, data->message->payloadlen);
+    csro_systen_get_hass_message_sub_topic(data, sub_topic);
     
+    if (strcmp(sub_topic, "channel1") == 0) 
+    {   
+        debug("payload:%s\n", payload);
+        if (strcmp(payload, "on") == 0)          { nlight_channel_set(&channel[0], 1, 2); valid = true; }
+        else if (strcmp(payload, "off") == 0)    { nlight_channel_set(&channel[0], 0, 2); valid = true; }
+    }
+    else if (strcmp(sub_topic, "channel2") == 0) 
+    {
+        debug("payload:%s\n", payload);
+        if (strcmp(payload, "on") == 0)          { nlight_channel_set(&channel[1], 1, 2); valid = true; }
+        else if (strcmp(payload, "off") == 0)    { nlight_channel_set(&channel[1], 0, 2); valid = true; }
+    }
+    else if (strcmp(sub_topic, "channel3") == 0) 
+    {
+        debug("payload:%s\n", payload);
+        if (strcmp(payload, "on") == 0)          { nlight_channel_set(&channel[2], 1, 2); valid = true; }
+        else if (strcmp(payload, "off") == 0)    { nlight_channel_set(&channel[2], 0, 2); valid = true; }
+    }
+    if(valid == true) { csro_mqtt_msg_trigger_status(NULL); }
 }
 
 void csro_nlight_alarm_action(uint16_t action)

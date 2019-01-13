@@ -22,6 +22,7 @@ void csro_device_prepare_timer_message(void)
     uint8_t timer_count = 0;
     char    key[20];
     cJSON   *alarm_json=cJSON_CreateObject();
+    cJSON   *single_alalm[ALARM_NUMBER];
 
     for(size_t i = 0; i < ALARM_NUMBER; i++)
     {
@@ -29,8 +30,10 @@ void csro_device_prepare_timer_message(void)
         { 
             timer_count++; 
             sprintf(key, "alarm%d", timer_count);
-            uint32_t alarm_value = (((uint32_t)alarms[i].weekday) << 25) + (((uint32_t)alarms[i].minutes) << 14) + alarms[i].action;
-            cJSON_AddNumberToObject(alarm_json, key, alarm_value);
+            cJSON_AddItemToObject(alarm_json, key, single_alalm[i] = cJSON_CreateObject());
+            cJSON_AddNumberToObject(single_alalm[i], "weekday", alarms[i].weekday);
+            cJSON_AddNumberToObject(single_alalm[i], "minutes", alarms[i].minutes);
+            cJSON_AddNumberToObject(single_alalm[i], "action",  alarms[i].action);
         }
         else 
         {
@@ -46,85 +49,56 @@ void csro_device_prepare_timer_message(void)
 
 void csro_device_handle_self_message(MessageData* data)
 {
-    char        sub_topic[50];
-    csro_systen_get_self_message_sub_topic(data, sub_topic);
+    uint32_t value = 0;
+    bool valid_alarm_cmd = false;
+    if(csro_system_parse_level1_json_number(data->message->payload, &value, "interval"))    { csro_system_set_interval(value); }
 
-    if (strcmp(sub_topic, "interval") == 0) 
-    {
-        uint32_t value = 0;
-        if(csro_system_parse_level1_json_number(data->message->payload, &value, "value")) 
-        { csro_system_set_interval(value); }
-    }
+    if(csro_system_parse_level1_json_number(data->message->payload, &value, "sysinfo"))     { if (value == 1) { csro_mqtt_msg_trigger_system(); } }
 
-    else if (strcmp(sub_topic, "system_info") == 0) 
-    {
-        uint32_t value = 0;
-        if(csro_system_parse_level1_json_number(data->message->payload, &value, "value")) 
-        { if (value == 1) { csro_mqtt_msg_trigger_system(); } }
-    }
+    if(csro_system_parse_level1_json_number(data->message->payload, &value, "alarminfo"))   { if (value == 1) { csro_mqtt_msg_trigger_alarm(); } }
 
-    else if (strcmp(sub_topic, "restart") == 0) 
-    {
-        uint32_t value = 0;
-        if(csro_system_parse_level1_json_number(data->message->payload, &value, "value")) 
-        { if (value == 1) { esp_restart(); } }
-    }
+    if(csro_system_parse_level1_json_number(data->message->payload, &value, "restart"))     { if (value == 1) { esp_restart(); } }
 
-    else if (strcmp(sub_topic, "alarm_info") == 0) 
+    if(csro_system_parse_level1_json_object(data->message->payload, "alarm_add"))  
     {
-        uint32_t value = 0;
-        if(csro_system_parse_level1_json_number(data->message->payload, &value, "value")) 
-        { if (value == 1) {csro_mqtt_msg_trigger_alarm(); } }
+        uint32_t weekday, minutes, action, valid_count=0;
+        if(csro_system_parse_level2_json_number(data->message->payload, &weekday, "alarm_add", "weekday"))   { valid_count++; }
+        if(csro_system_parse_level2_json_number(data->message->payload, &minutes, "alarm_add", "minutes"))   { valid_count++; }
+        if(csro_system_parse_level2_json_number(data->message->payload, &action, "alarm_add", "action"))     { valid_count++; }
+        if(valid_count == 3) { csro_alarm_add(weekday, minutes, action); valid_alarm_cmd = true; }
     }
-
-    else if (strcmp(sub_topic, "alarm_func") == 0) 
+    if(csro_system_parse_level1_json_object(data->message->payload, "alarm_modify"))  
     {
-        uint32_t index, weekday, minutes, action;
-        char command[50];
-        if(csro_system_parse_level1_json_string(data->message->payload, command, "command"))
-        {
-            if (strcmp(command, "add") == 0)
-            {
-                if (csro_system_parse_level1_json_number(data->message->payload, &weekday, "weekday") != true) { return; }
-                if (csro_system_parse_level1_json_number(data->message->payload, &minutes, "minutes") != true) { return; }
-                if (csro_system_parse_level1_json_number(data->message->payload, &action, "action") != true) { return; }
-                csro_alarm_add(weekday, minutes, action);
-            }
-            else if (strcmp(command, "modify") == 0)
-            {
-                if (csro_system_parse_level1_json_number(data->message->payload, &index, "index") != true) { return; }
-                if (csro_system_parse_level1_json_number(data->message->payload, &weekday, "weekday") != true) { return; }
-                if (csro_system_parse_level1_json_number(data->message->payload, &minutes, "minutes") != true) { return; }
-                if (csro_system_parse_level1_json_number(data->message->payload, &action, "action") != true) { return; }
-                csro_alarm_modify(index, weekday, minutes, action);
-            }
-            else if (strcmp(command, "delete") == 0)
-            {
-                if (csro_system_parse_level1_json_number(data->message->payload, &index, "index") != true) { return; }
-                csro_alarm_delete(index);
-            }
-            else if (strcmp(command, "clear") == 0)
-            {
-                csro_alarm_clear();
-            }
-            csro_mqtt_msg_trigger_alarm();
-        }
+        uint32_t index, weekday, minutes, action, valid_count=0;
+        if(csro_system_parse_level2_json_number(data->message->payload, &index, "alarm_modify", "index"))        { valid_count++; }
+        if(csro_system_parse_level2_json_number(data->message->payload, &weekday, "alarm_modify", "weekday"))    { valid_count++; }
+        if(csro_system_parse_level2_json_number(data->message->payload, &minutes, "alarm_modify", "minutes"))    { valid_count++; }
+        if(csro_system_parse_level2_json_number(data->message->payload, &action, "alarm_modify", "action"))      { valid_count++; }
+        if(valid_count == 4) { csro_alarm_modify(index, weekday, minutes, action); valid_alarm_cmd = true; }
     }
-
-    else
+    if(csro_system_parse_level1_json_object(data->message->payload, "alarm_delete"))  
     {
-        #ifdef NLIGHT
-            csro_nlight_handle_self_message(data);
-        #elif defined DLIGHT
-            csro_dlight_handle_self_message(data);
-        #elif defined MOTOR
-            csro_motor_handle_self_message(data);
-        #elif defined AQI_MONITOR
-            csro_air_monitor_handle_self_message(data);
-        #elif defined AIR_SYSTEM
-            csro_air_system_handle_self_message(data);
-        #endif
+        uint32_t index;
+        if(csro_system_parse_level2_json_number(data->message->payload, &index, "alarm_delete", "index"))        { csro_alarm_delete(index-1); valid_alarm_cmd = true; }
     }
+    if(csro_system_parse_level1_json_object(data->message->payload, "alarm_clear"))  
+    {
+        uint32_t clear_value;
+        if(csro_system_parse_level2_json_number(data->message->payload, &clear_value, "alarm_clear", "value"))   { if (clear_value == 1) { csro_alarm_clear(); valid_alarm_cmd = true; } }
+    }
+    if( valid_alarm_cmd == true) { csro_mqtt_msg_trigger_alarm(); }
+    
+    #ifdef NLIGHT
+        csro_nlight_handle_self_message(data);
+    #elif defined DLIGHT
+        csro_dlight_handle_self_message(data);
+    #elif defined MOTOR
+        csro_motor_handle_self_message(data);
+    #elif defined AQI_MONITOR
+        csro_air_monitor_handle_self_message(data);
+    #elif defined AIR_SYSTEM
+        csro_air_system_handle_self_message(data);
+    #endif
 }
 
 

@@ -129,11 +129,12 @@ void csro_system_set_interval(uint16_t interval);
 
 
 //csro_misc.c
+bool csro_system_parse_level1_json_object(char *msg, char *object_name);
 bool csro_system_parse_level1_json_number(char *msg, uint32_t *dest, char *object_name);
 bool csro_system_parse_level2_json_number(char *msg, uint32_t *dest, char *object_name, char *sub_object_name);
 bool csro_system_parse_level1_json_string(char *msg, char *dest, char *object_name);
 bool csro_system_parse_level2_json_string(char *msg, char *dest, char *object_name, char *sub_object_name);
-bool csro_systen_get_self_message_sub_topic(MessageData *data, char *sub_topic);
+void csro_systen_get_hass_message_sub_topic(MessageData *data, char *sub_topic);
 
 //csro_datetime.c
 void csro_alarm_add(uint8_t weekday, uint16_t minutes, uint16_t action);

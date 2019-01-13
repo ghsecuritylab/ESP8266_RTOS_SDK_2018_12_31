@@ -137,16 +137,17 @@ void csro_system_prepare_message(void)
 
     cJSON *sys_json=cJSON_CreateObject();
 
-    cJSON_AddNumberToObject(sys_json, "power_count", sysinfo.power_on_count);
-    cJSON_AddNumberToObject(sys_json, "router_count", sysinfo.wifi_conn_count);
-    cJSON_AddNumberToObject(sys_json, "broker_count", sysinfo.serv_conn_count);
-    cJSON_AddNumberToObject(sys_json, "free_heap", esp_get_free_heap_size());
+    cJSON_AddNumberToObject(sys_json, "power", sysinfo.power_on_count);
+    cJSON_AddNumberToObject(sys_json, "router", sysinfo.wifi_conn_count);
+    cJSON_AddNumberToObject(sys_json, "broker", sysinfo.serv_conn_count);
+    cJSON_AddNumberToObject(sys_json, "heap", esp_get_free_heap_size());
 
-    cJSON_AddStringToObject(sys_json, "on_time", datetime.time_str);
+    cJSON_AddStringToObject(sys_json, "on", datetime.time_str);
     cJSON_AddStringToObject(sys_json, "ip", sysinfo.ip_str);
     cJSON_AddStringToObject(sys_json, "mac", sysinfo.mac_str);
-    cJSON_AddStringToObject(sys_json, "host_name", sysinfo.host_name);
-    cJSON_AddStringToObject(sys_json, "device_type", sysinfo.dev_type);
+    cJSON_AddStringToObject(sys_json, "name", sysinfo.host_name);
+    cJSON_AddStringToObject(sys_json, "type", sysinfo.dev_type);
+    cJSON_AddNumberToObject(sys_json, "interval", mqtt.interval);
 
     char *out = cJSON_PrintUnformatted(sys_json);
 	strcpy(mqtt.content, out);
